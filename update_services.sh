@@ -5,3 +5,4 @@ cd /opt/flow
 /usr/bin/docker-compose pull
 /usr/bin/docker-compose up -d
 npm update -g n8n
+systemctl reload nginx
