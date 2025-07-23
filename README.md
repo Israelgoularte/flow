@@ -34,3 +34,17 @@ sudo ./update_services.sh
 - `docker-compose.yml` – gerado durante a instalação em `/opt/flow`.
 
 **Observação**: ajuste as configurações do arquivo `docker-compose.yml` conforme sua necessidade, especialmente para `evolution_api`, que utiliza uma imagem genérica `evolution/evolution-api:latest`.
+
+## CRM de Exemplo
+
+Além dos scripts, este repositório contém um pequeno exemplo de CRM com backend em Node.js/Express e frontend estático.
+
+### Executando o servidor
+
+```bash
+cd server
+npm install
+npm start
+```
+
+O frontend fica disponível em `http://localhost:3001` e utiliza a API exposta em `/api`.
