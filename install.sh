@@ -10,11 +10,12 @@ fi
 
 # Atualiza pacotes e instala dependências
 apt-get update
-apt-get install -y docker.io docker-compose nodejs npm postgresql postgresql-contrib
+apt-get install -y docker.io docker-compose nodejs npm postgresql postgresql-contrib nginx
 
 # Inicia serviços necessários
 systemctl enable --now docker
 systemctl enable --now postgresql
+systemctl enable --now nginx
 
 # Instala n8n globalmente
 npm install -g n8n
@@ -62,7 +63,7 @@ COMPOSE
 cat <<'ENV' > .env.chatwoot
 RAILS_ENV=production
 SECRET_KEY_BASE=$(openssl rand -hex 64)
-FRONTEND_URL=http://localhost:3000
+FRONTEND_URL=https://chat.raelflow.com
 PORT=3000
 INSTALLATION_ENV=docker
 POSTGRES_HOST=postgres
@@ -75,6 +76,60 @@ ENV
 
 # Sobe os containers
 /usr/bin/docker-compose up -d
+
+# Configura o Nginx para expor cada serviço em um subdomínio
+cat <<'NGINX' > /etc/nginx/sites-available/flow.conf
+server {
+    listen 80;
+    server_name chat.raelflow.com;
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 80;
+    server_name n8n.raelflow.com;
+    location / {
+        proxy_pass http://localhost:5678;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 80;
+    server_name api.raelflow.com;
+    location / {
+        proxy_pass http://localhost:8081;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+server {
+    listen 80;
+    server_name crm.raelflow.com;
+    location / {
+        proxy_pass http://localhost:3001;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+NGINX
+ln -sf /etc/nginx/sites-available/flow.conf /etc/nginx/sites-enabled/flow.conf
+rm -f /etc/nginx/sites-enabled/default
+systemctl reload nginx
 
 cat <<'UPDATE' > /usr/local/bin/update_services.sh
 #!/bin/bash
