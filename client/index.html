@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>CRM Login</title>
+</head>
+<body>
+  <h1>Login</h1>
+  <input id="email" placeholder="email"/><br>
+  <input id="password" type="password" placeholder="password"/><br>
+  <button onclick="login()">Login</button>
+  <button onclick="register()">Register</button>
+  <script>
+    async function login(){
+      const res = await fetch('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.value,password:password.value})});
+      const data = await res.json();
+      if(data.token){localStorage.setItem('token',data.token); window.location='dashboard.html';}
+      else alert(data.error);
+    }
+    async function register(){
+      const res = await fetch('/api/auth/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email.value,password:password.value})});
+      const data = await res.json();
+      if(data.id){alert('Registered, please login');}
+      else alert(data.error);
+    }
+  </script>
+</body>
+</html>
